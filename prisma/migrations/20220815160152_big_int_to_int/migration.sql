@@ -1,7 +1,7 @@
 -- CreateTable
 CREATE TABLE "Account" (
     "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
+    "userId" INTEGER NOT NULL,
     "type" TEXT NOT NULL,
     "provider" TEXT NOT NULL,
     "providerAccountId" TEXT NOT NULL,
@@ -20,7 +20,7 @@ CREATE TABLE "Account" (
 CREATE TABLE "Session" (
     "id" TEXT NOT NULL,
     "sessionToken" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
+    "userId" INTEGER NOT NULL,
     "expires" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Session_pkey" PRIMARY KEY ("id")
@@ -28,7 +28,7 @@ CREATE TABLE "Session" (
 
 -- CreateTable
 CREATE TABLE "User" (
-    "id" TEXT NOT NULL,
+    "id" SERIAL NOT NULL,
     "name" TEXT,
     "email" TEXT,
     "emailVerified" TIMESTAMP(3),
@@ -40,12 +40,12 @@ CREATE TABLE "User" (
 
 -- CreateTable
 CREATE TABLE "Product" (
-    "id" TEXT NOT NULL,
+    "id" SERIAL NOT NULL,
     "name" VARCHAR(255) NOT NULL,
     "descrption" TEXT NOT NULL,
-    "fromId" TEXT NOT NULL,
-    "toId" TEXT,
-    "ownerId" TEXT NOT NULL,
+    "fromId" INTEGER NOT NULL,
+    "toId" INTEGER,
+    "ownerId" INTEGER NOT NULL,
 
     CONSTRAINT "Product_pkey" PRIMARY KEY ("id")
 );
@@ -59,13 +59,13 @@ CREATE TABLE "Topic" (
 
 -- CreateTable
 CREATE TABLE "Auction" (
-    "id" TEXT NOT NULL,
-    "productId" TEXT NOT NULL,
+    "id" SERIAL NOT NULL,
+    "productId" INTEGER NOT NULL,
     "basePrice" INTEGER NOT NULL,
     "startTime" TIMESTAMP(3) NOT NULL,
     "TimeZone" VARCHAR(255),
     "highestBid" INTEGER,
-    "highestBidderId" TEXT,
+    "highestBidderId" INTEGER,
     "sold" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "Auction_pkey" PRIMARY KEY ("id")
@@ -80,20 +80,20 @@ CREATE TABLE "VerificationToken" (
 
 -- CreateTable
 CREATE TABLE "_ProductToTopic" (
-    "A" TEXT NOT NULL,
+    "A" INTEGER NOT NULL,
     "B" TEXT NOT NULL
 );
 
 -- CreateTable
 CREATE TABLE "_ProductToUser" (
-    "A" TEXT NOT NULL,
-    "B" TEXT NOT NULL
+    "A" INTEGER NOT NULL,
+    "B" INTEGER NOT NULL
 );
 
 -- CreateTable
 CREATE TABLE "_TopicToUser" (
     "A" TEXT NOT NULL,
-    "B" TEXT NOT NULL
+    "B" INTEGER NOT NULL
 );
 
 -- CreateIndex

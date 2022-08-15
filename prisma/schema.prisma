@@ -17,7 +17,7 @@ datasource db {
 // Necessary for Next auth
 model Account {
   id                String  @id @default(cuid())
-  userId            String
+  userId            Int
   type              String
   provider          String
   providerAccountId String
@@ -36,13 +36,13 @@ model Account {
 model Session {
   id           String   @id @default(cuid())
   sessionToken String   @unique
-  userId       String
+  userId       Int
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model User {
-  id                 String    @id @default(cuid())
+  id                 Int       @id @default(autoincrement())
   name               String?
   email              String?   @unique
   emailVerified      DateTime?
@@ -59,14 +59,15 @@ model User {
 }
 
 model Product {
-  id              String   @id @default(cuid())
+  id              Int      @id @default(autoincrement())
   name            String   @db.VarChar(255)
-  descrption      String   @db.Text
-  fromId          String
+  description     String   @db.Text
+  image           String
+  fromId          Int
   from            User     @relation("from", fields: [fromId], references: [id])
-  toId            String?
+  toId            Int?
   to              User?    @relation("to", fields: [toId], references: [id])
-  ownerId         String
+  ownerId         Int
   owner           User     @relation("owned", fields: [ownerId], references: [id])
   topics          Topic[]
   subscribedUsers User[]
@@ -80,14 +81,14 @@ model Topic {
 }
 
 model Auction {
-  id              String   @id @default(cuid())
-  productId       String   @unique
+  id              Int      @id @default(autoincrement())
+  productId       Int      @unique
   product         Product  @relation("auction", fields: [productId], references: [id])
   basePrice       Int
   startTime       DateTime
   TimeZone        String?  @db.VarChar(255)
   highestBid      Int?
-  highestBidderId String?
+  highestBidderId Int?
   highestBidder   User?    @relation("highest-bidder", fields: [highestBidderId], references: [id])
   sold            Boolean  @default(false)
 }

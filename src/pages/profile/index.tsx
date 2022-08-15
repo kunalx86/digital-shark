@@ -2,11 +2,17 @@ import { authOptions } from "@pages/api/auth/[...nextauth]"
 import { GetServerSideProps } from "next"
 import { unstable_getServerSession } from "next-auth"
 import { useSession } from "next-auth/react"
+import Head from "next/head"
 
 function Profile() {
   const { data } = useSession()
   return (
-    <p>{data?.user?.name}</p>
+    <>
+      <Head>
+        <title>Profile {`| ${data?.user?.name || ""}`}</title>
+      </Head>
+      <p>{data?.user?.name}</p>
+    </>
   )
 }
 
