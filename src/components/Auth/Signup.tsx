@@ -11,9 +11,9 @@ import {
   Heading,
   Image
 } from '@chakra-ui/react'
-import { ClientSafeProvider, getProviders, LiteralUnion, signIn } from 'next-auth/react'
-import { InferGetServerSidePropsType } from 'next'
+import { ClientSafeProvider, LiteralUnion, signIn } from 'next-auth/react'
 import { BuiltInProviderType } from 'next-auth/providers'
+import { useRouter } from 'next/router'
 
 function GoogleLogo() {
   return (
@@ -33,7 +33,11 @@ function DiscordLogo() {
 }
 
 export function Signup({ providers }: { providers: Record<LiteralUnion<BuiltInProviderType, string>, ClientSafeProvider> | null }) {
-  console.log(providers)
+  const { query } = useRouter()
+  let callbackUrl: string | undefined = undefined;
+  if ("next" in query && typeof query.next === "string") {
+    callbackUrl = (query.next as string).startsWith("/") ? (query.next as string) : undefined;
+  }
   return (
     <Container 
       borderRadius="md"
@@ -62,10 +66,14 @@ export function Signup({ providers }: { providers: Record<LiteralUnion<BuiltInPr
             <Divider borderColor={useColorModeValue('md', 'md-dark')}/>
           </HStack>
           <Flex alignItems="center" direction="column" pt="2vh">
-            <Button onClick={() => signIn(providers?.google.id)} m={3} _hover={{
+            <Button onClick={() => signIn(providers?.google.id, {
+              callbackUrl
+            })} m={3} _hover={{
               bg: "gray.200"
             }} bg="white" color="#4285F4" w="60%" variant="solid" leftIcon={<GoogleLogo />}>Google</Button>
-            <Button onClick={() => signIn(providers?.discord.id)} m={3} _hover={{
+            <Button onClick={() => signIn(providers?.discord.id, {
+              callbackUrl
+            })} m={3} _hover={{
               bg: "gray.200"
             }} bg="white" color="#5865F2" w="60%" variant="solid" leftIcon={<DiscordLogo />}>Discord</Button>
           </Flex>

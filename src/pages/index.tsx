@@ -4,7 +4,7 @@ import type { NextPage } from "next";
 import Head from "next/head";
 
 const Home: NextPage = () => {
-  const { data } = trpc.useQuery(["hello"])
+  // const { data } = trpc.useQuery(["hello"])
   return (
     <>
       <Head>

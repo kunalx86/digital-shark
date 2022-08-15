@@ -16,11 +16,12 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
-    redirect({ baseUrl }) {
-      // TODO: Do something to redirect to the correct page
-      return baseUrl
+    redirect({ baseUrl, url }) {
+      if (url.includes("/signup")) return baseUrl
+      return url
     }
   },
+  secret: env.NEXTAUTH_SECRET,
   // Configure one or more authentication providers
   adapter: PrismaAdapter(prisma),
   providers: [
