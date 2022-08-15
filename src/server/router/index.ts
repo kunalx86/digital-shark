@@ -2,8 +2,6 @@
 import { createRouter } from "./context";
 import superjson from "superjson";
 
-import { protectedExampleRouter } from "./protected-example-router";
-
 export const appRouter = createRouter()
   .transformer(superjson)
   .query("hello", {
@@ -11,7 +9,6 @@ export const appRouter = createRouter()
       return "Hello from TRPC"
     }
   })
-  .merge("question.", protectedExampleRouter);
 
 // export type definition of API
 export type AppRouter = typeof appRouter;

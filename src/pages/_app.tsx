@@ -3,11 +3,21 @@ import { withTRPC } from "@trpc/next";
 import type { AppRouter } from "@server/router";
 import type { AppType } from "next/dist/shared/lib/utils";
 import superjson from "superjson";
-import { SessionProvider } from "next-auth/react";
+import { SessionProvider, useSession } from "next-auth/react";
 import "../styles/globals.css";
-import { ChakraProvider } from "@chakra-ui/react";
+import { ChakraProvider, Spinner } from "@chakra-ui/react";
 import Layout from "@components/Layout";
 import theme from "src/theme"
+import { ReactNode } from "react";
+
+function AuthLoader({ children }: { children: ReactNode }) {
+  const { status } = useSession();
+  if (status === "loading") {
+    return <Spinner m="auto" />
+  } else {
+    return <>{children}</>
+  }
+}
 
 const MyApp: AppType = ({
   Component,
@@ -17,7 +27,9 @@ const MyApp: AppType = ({
     <ChakraProvider resetCSS theme={theme}>
       <SessionProvider session={session}>
         <Layout>
-          <Component {...pageProps} />
+          <AuthLoader>
+            <Component {...pageProps} />
+          </AuthLoader>
         </Layout>
       </SessionProvider>
     </ChakraProvider>
