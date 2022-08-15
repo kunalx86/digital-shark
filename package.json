@@ -1,7 +1,15 @@
 {
   "name": "digital-shark",
   "version": "0.1.0",
-  "private": true,
+  "author": {
+    "name": "Kunal Joshi",
+    "email": "mail.kunaljoshi@gmail.com",
+    "url": "https://github.com/kunalx86/"
+  },
+  "repository": {
+    "url": "https://github.com/kunalx86/digital-shark",
+    "type": "public"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
