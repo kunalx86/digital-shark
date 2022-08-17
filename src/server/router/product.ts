@@ -25,6 +25,7 @@ export const productRouter = createProtectedRouter()
       return products;
     }
   })
+  // TODO: Fix schema
   .mutation("create", {
     input: z.object({
       name: z.string().max(255, "Name cannot exceed 255 characters"),

@@ -1,3 +1,5 @@
+import { Flex } from "@chakra-ui/react"
+import { ProductForm } from "@components/Procuct/ProductForm"
 import { authOptions } from "@pages/api/auth/[...nextauth]"
 import { GetServerSideProps } from "next"
 import { unstable_getServerSession } from "next-auth"
@@ -12,6 +14,9 @@ function Profile() {
         <title>Profile {`| ${data?.user?.name || ""}`}</title>
       </Head>
       <p>{data?.user?.name}</p>
+      <Flex>
+        <ProductForm />
+      </Flex>
     </>
   )
 }

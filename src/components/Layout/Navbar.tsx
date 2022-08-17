@@ -1,4 +1,4 @@
-import { Button, Box, Container, HStack, useColorModeValue, Avatar, Spacer, useColorMode } from "@chakra-ui/react";
+import { Button, Box, Container, HStack, useColorModeValue, Avatar, Spacer, useColorMode, Image } from "@chakra-ui/react";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -25,7 +25,7 @@ export function Navbar() {
           {status === "authenticated" && (
             <>
               <Link href="/profile">
-                <Avatar src={data.user?.image ?? ""} />
+                <Image alt="Profile Picture" width="50px" height="50px" rounded="full" referrerPolicy="no-referrer" src={data.user?.image!} />
               </Link>
               <Spacer />
               <Button variant="outline" onClick={() => signOut()}>Sign Out</Button>
