@@ -1,8 +1,8 @@
 import { Button, Container, FormControl, FormErrorMessage, Image, FormLabel, Icon, Input, InputGroup, InputLeftElement, Spinner, Textarea, useColorMode, useColorModeValue, useUpdateEffect } from "@chakra-ui/react";
-import { useForm, useFieldArray, useController, Control } from "react-hook-form"
+import { useForm, useFieldArray, useController, Control, UseFormSetValue } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { useDeferredValue, useRef, useState } from "react";
+import { useDeferredValue, useEffect, useRef, useState } from "react";
 import { trpc } from "@utils/trpc";
 import { TagDropDownList } from "./DropDownList";
 import { FaFile } from "react-icons/fa";
@@ -11,17 +11,17 @@ type FormData = {
   name: string,
   description: string,
   image: File,
-  topics: Topics[]
+  topics: Topic[]
 }
 
-type Topics = {
+type Topic = {
   tag: string
 }
 
 const formSchema = z.object({
   name: z.string().max(255, "Name cannot exceed 255 characters").min(1),
   description: z.string(),
-  sign: z.string(),
+  image: z.any(),
   topics: z.array(z.object({
     tag: z.string()
   })).min(0).max(4)
@@ -32,6 +32,7 @@ export function ProductForm() {
     handleSubmit,
     register,
     control,
+    getValues,
     formState: { errors, isSubmitting }
   } = useForm<FormData>({
     resolver: zodResolver(formSchema)
@@ -44,12 +45,28 @@ export function ProductForm() {
       minLength: 0
     }
   })
+
+  const { mutateAsync } = trpc.useMutation(["product.create"])
+
   const bg = useColorModeValue("cyan.200", "darkcyan")
   return (
     <Container maxW="lg" py={{ base: '12', md: '24' }} px={{ base: '0', sm: '8' }} as="div" borderRadius="md" bg={bg} boxShadow="base" p={3}>
-    <form onSubmit={handleSubmit((values) => {
-      console.log(values)
+    <form onSubmit={handleSubmit(async ({ name, description, image, topics }) => {
+      const formData = new FormData()
+      formData.append("product", image);
+      const res = await fetch("/api/upload", {
+        method: "post",
+        body: formData
+      });
+      const { publicURL } = await res.json() as { publicURL: string }
+      const product = await mutateAsync({
+        name,
+        description,
+        topics,
+        image: publicURL,
+      })
     })}>
+      <pre>{JSON.stringify(errors, null, 2)}</pre>
       <FormControl p={2} isInvalid={!!errors.name}>
         <FormLabel htmlFor="name">Name</FormLabel>
         <Input
@@ -83,7 +100,7 @@ export function ProductForm() {
           <Button onClick={() => remove(idx)}>Remove Tag</Button>
         </FormControl>
       ))} 
-      <Button mr={2} variant="outline" onClick={() => append({
+      <Button mr={2} isDisabled={Object.keys(fields).length >= 4} variant="outline" onClick={() => Object.keys(fields).length < 4 && append({
         tag: ""
       })}>Add Tags</Button>
       <Button ml={2} isLoading={isSubmitting} type="submit" variant="solid">Save</Button>
@@ -119,7 +136,7 @@ function TagInput({ name, control }: { name: `topics.${number}.tag`, control: Co
 
 function FileUpload({ name, control }: { 
   name: `image`,
-  control: Control<FormData, any> 
+  control: Control<FormData, any>,
 }) {
   const {
     field: { ref, value, onChange, ...inputProps },
@@ -128,7 +145,6 @@ function FileUpload({ name, control }: {
     name,
     control
   })
-  console.log(value) 
   return (
     <FormControl isInvalid={!!error}>
       <FormLabel htmlFor="writeUpFile">Image of Product</FormLabel>
@@ -138,13 +154,15 @@ function FileUpload({ name, control }: {
         >
           <Icon as={FaFile} />
         </InputLeftElement>
-        <Input type='file' onChange={e => onChange(e.target.files![0])} {...inputProps} ref={ref} style={{ display: 'none' }} />
-        {/* <Input
+        <Input
           type="file"
+          ref={ref}
           placeholder={"Upload your product file"}
-          onClick={() => ref({  })}
-          // value={value}
-        /> */}
+          onChange={e => {
+            onChange(e.target.files![0]!)
+          }}
+          {...inputProps}
+        />
       </InputGroup>
       {value && <ImagePreview file={value} />}
       <FormErrorMessage>

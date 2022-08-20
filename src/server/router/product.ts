@@ -1,5 +1,6 @@
 import { createProtectedRouter } from "./protected-router";
 import * as z from "zod"
+import { Tag } from "@chakra-ui/react";
 
 /**
  * Create product
@@ -31,7 +32,6 @@ export const productRouter = createProtectedRouter()
       name: z.string().max(255, "Name cannot exceed 255 characters"),
       description: z.string(),
       image: z.string().url(),
-      sign: z.string(),
       topics: z.array(z.object({
         tag: z.string()
       }))
