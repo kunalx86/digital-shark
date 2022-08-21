@@ -1,4 +1,4 @@
-import { Button, Container, FormControl, FormErrorMessage, Image, FormLabel, Icon, Input, InputGroup, InputLeftElement, Spinner, Textarea, useColorMode, useColorModeValue, useUpdateEffect } from "@chakra-ui/react";
+import { Button, Container, FormControl, FormErrorMessage, Image, FormLabel, Icon, Input, InputGroup, InputLeftElement, Spinner, Textarea, useColorMode, useColorModeValue, useUpdateEffect, useToast } from "@chakra-ui/react";
 import { useForm, useFieldArray, useController, Control, UseFormSetValue } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -6,6 +6,7 @@ import { useDeferredValue, useEffect, useRef, useState } from "react";
 import { trpc } from "@utils/trpc";
 import { TagDropDownList } from "./DropDownList";
 import { FaFile } from "react-icons/fa";
+import { TRPCClientError } from "@trpc/client";
 
 type FormData = {
   name: string,
@@ -20,10 +21,19 @@ type Topic = {
 
 const formSchema = z.object({
   name: z.string().max(255, "Name cannot exceed 255 characters").min(1),
-  description: z.string(),
-  image: z.any(),
+  description: z.string().max(1024).min(4, "Atlest 4 characters are needed"),
+  image: 
+    typeof window === "undefined" 
+    ? z.undefined()
+    : z.instanceof(File)
+      .refine(file => file !== undefined || file !== null,{
+        message: "Product image is necessary"
+      })
+      .refine(file => file.type === "image/png" || file.type === "image/jpg" || file.type === "image/jpeg", {
+        message: "Only images allowed"
+      }),
   topics: z.array(z.object({
-    tag: z.string()
+    tag: z.string().min(3, "Tag must be atleast 3 characters long")
   })).min(0).max(4)
 })
 
@@ -32,7 +42,7 @@ export function ProductForm() {
     handleSubmit,
     register,
     control,
-    getValues,
+    reset,
     formState: { errors, isSubmitting }
   } = useForm<FormData>({
     resolver: zodResolver(formSchema)
@@ -45,8 +55,24 @@ export function ProductForm() {
       minLength: 0
     }
   })
-
-  const { mutateAsync } = trpc.useMutation(["product.create"])
+  const toast = useToast();
+  const { mutateAsync } = trpc.useMutation(["product.create"], {
+    onError(error, _, __) {
+      toast({
+        status: "error",
+        title: "Product creation failed",
+        description: error.message,
+      })
+    },
+    onSuccess(data, _, __) {
+      toast({
+        status: "success",
+        title: "Product creation successful",
+        description: `Product with name ${data.name} successfully created`
+      })
+      reset()
+    },
+  })
 
   const bg = useColorModeValue("cyan.200", "darkcyan")
   return (
@@ -54,19 +80,27 @@ export function ProductForm() {
     <form onSubmit={handleSubmit(async ({ name, description, image, topics }) => {
       const formData = new FormData()
       formData.append("product", image);
-      const res = await fetch("/api/upload", {
+      fetch("/api/upload", {
         method: "post",
         body: formData
-      });
-      const { publicURL } = await res.json() as { publicURL: string }
-      const product = await mutateAsync({
-        name,
-        description,
-        topics,
-        image: publicURL,
       })
+        .then(res => res.json() as Promise<{ publicURL: string }>)
+        .then(({ publicURL }) => mutateAsync({
+          name,
+          description,
+          topics,
+          image: publicURL
+        }))
+        .catch(err => {
+          console.log(err)
+          if (err instanceof TRPCClientError) return;
+          toast({
+            status: "error",
+            title: "Product creation failed",
+            description: err?.message || "Something went wrong"
+          })
+        })
     })}>
-      <pre>{JSON.stringify(errors, null, 2)}</pre>
       <FormControl p={2} isInvalid={!!errors.name}>
         <FormLabel htmlFor="name">Name</FormLabel>
         <Input
@@ -91,18 +125,21 @@ export function ProductForm() {
       </FormControl>
       <FileUpload name="image" control={control} />
       {fields.map((field, idx) => (
-        <FormControl pt={2} pb={2} key={field.id}>
+        <FormControl pt={2} pb={2} key={field.id} isInvalid={!!errors.topics?.[idx]?.tag?.message}>
           <FormLabel>Tag #{idx}</FormLabel>
           <TagInput
             name={`topics.${idx}.tag`}
             control={control}
           />
+          <FormErrorMessage>
+            {errors.topics?.[idx]?.tag?.message}
+          </FormErrorMessage>
           <Button onClick={() => remove(idx)}>Remove Tag</Button>
         </FormControl>
       ))} 
       <Button mr={2} isDisabled={Object.keys(fields).length >= 4} variant="outline" onClick={() => Object.keys(fields).length < 4 && append({
         tag: ""
-      })}>Add Tags</Button>
+      })}>Add Tag</Button>
       <Button ml={2} isLoading={isSubmitting} type="submit" variant="solid">Save</Button>
     </form> 
     </Container>

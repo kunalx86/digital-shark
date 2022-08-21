@@ -43,7 +43,10 @@ export const productRouter = createProtectedRouter()
           name,
           description,
           topics: {
-            connect: topics
+            connectOrCreate: topics.map(topic => ({
+              create: topic,
+              where: topic
+            }))
           },
           fromId: ctx.session.user.id,
           ownerId: ctx.session.user.id,

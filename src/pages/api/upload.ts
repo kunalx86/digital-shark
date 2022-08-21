@@ -15,7 +15,7 @@ const supabaseClient = createClient(env.SUPABASE_URL, env.SUPABASE_SECRET)
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await unstable_getServerSession(req, res, authOptions)
   if (!session) {
-    return res.status(403).json({
+    return res.status(401).json({
       error: "Not authenticated"
     })
   }
@@ -32,6 +32,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   })
   const productFile = files.product as formidable.File
   const productImage = await readFile(productFile.filepath)
+  const extension = productFile.originalFilename?.split('.').at(-1)
+
+  if (!["jpg", "jpeg", "png"].includes(extension ?? ""))
+    return res.status(400).json({ error: "Only images are allowed" })
 
   const { data, error } = await supabaseClient.storage
     .from("product-images")
