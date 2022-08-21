@@ -29,6 +29,9 @@
       "@pages/*": [
         "src/pages/*"
       ],
+      "@schemas/*": [
+        "src/schemas/*"
+      ],
       "@env/*": [
         "src/env/*"
       ]

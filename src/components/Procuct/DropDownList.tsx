@@ -1,4 +1,4 @@
-import { Container, Flex, useOutsideClick } from "@chakra-ui/react";
+import { Container, Flex, useColorModeValue, useOutsideClick } from "@chakra-ui/react";
 import { ChangeEvent, useRef } from "react";
 import styles from "./DropDownList.module.css"
 
@@ -16,6 +16,7 @@ export function TagDropDownList({ topics, open, setOpenOff, onChange }: {
         setOpenOff()
     }
   })
+  const bg = useColorModeValue("gray.300", "blackAlpha.500")
   return (
     <>
       <Flex
@@ -24,9 +25,8 @@ export function TagDropDownList({ topics, open, setOpenOff, onChange }: {
         position="relative"
         overflowY="scroll"
         overflowX="hidden"
-        bgColor="cyan.800"
+        bg={bg}
         borderRadius="md"
-        boxShadow="md"
         width="100%"
         maxHeight={["100px", "100px", "200px", "200px"]}
         p={2}
@@ -50,7 +50,7 @@ export function TagDropDownList({ topics, open, setOpenOff, onChange }: {
             setOpenOff()
           }}
           _hover={{
-            bg: "cyan.900"
+            bg
           }}
         >
           {topic.tag}

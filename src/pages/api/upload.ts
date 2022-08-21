@@ -5,9 +5,7 @@ import { env } from "@env/server.mjs";
 import { unstable_getServerSession } from "next-auth";
 import { authOptions } from "@pages/api/auth/[...nextauth]"
 import formidable, { File } from "formidable"
-import PersistentFile from "formidable/PersistentFile";
 
-type ProcessedFiles = Array<[string, File]>;
 
 const supabaseClient = createClient(env.SUPABASE_URL, env.SUPABASE_SECRET)
 

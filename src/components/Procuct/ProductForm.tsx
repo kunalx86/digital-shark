@@ -1,12 +1,12 @@
-import { Button, Container, FormControl, FormErrorMessage, Image, FormLabel, Icon, Input, InputGroup, InputLeftElement, Spinner, Textarea, useColorMode, useColorModeValue, useUpdateEffect, useToast } from "@chakra-ui/react";
-import { useForm, useFieldArray, useController, Control, UseFormSetValue } from "react-hook-form"
+import { Button, Container, FormControl, FormErrorMessage, Image, FormLabel, Icon, Input, InputGroup, InputLeftElement, Spinner, Textarea, useToast, Flex, Heading, useColorModeValue } from "@chakra-ui/react";
+import { useForm, useFieldArray, useController, Control } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
-import { useDeferredValue, useEffect, useRef, useState } from "react";
+import { useDeferredValue, useState } from "react";
 import { trpc } from "@utils/trpc";
 import { TagDropDownList } from "./DropDownList";
 import { FaFile } from "react-icons/fa";
 import { TRPCClientError } from "@trpc/client";
+import { createProductSchema } from "@schemas/product";
 
 type FormData = {
   name: string,
@@ -19,24 +19,6 @@ type Topic = {
   tag: string
 }
 
-const formSchema = z.object({
-  name: z.string().max(255, "Name cannot exceed 255 characters").min(1),
-  description: z.string().max(1024).min(4, "Atlest 4 characters are needed"),
-  image: 
-    typeof window === "undefined" 
-    ? z.undefined()
-    : z.instanceof(File)
-      .refine(file => file !== undefined || file !== null,{
-        message: "Product image is necessary"
-      })
-      .refine(file => file.type === "image/png" || file.type === "image/jpg" || file.type === "image/jpeg", {
-        message: "Only images allowed"
-      }),
-  topics: z.array(z.object({
-    tag: z.string().min(3, "Tag must be atleast 3 characters long")
-  })).min(0).max(4)
-})
-
 export function ProductForm() {
   const { 
     handleSubmit,
@@ -45,7 +27,7 @@ export function ProductForm() {
     reset,
     formState: { errors, isSubmitting }
   } = useForm<FormData>({
-    resolver: zodResolver(formSchema)
+    resolver: zodResolver(createProductSchema)
   })
   const { fields, append, remove } = useFieldArray({
     control,
@@ -74,9 +56,18 @@ export function ProductForm() {
     },
   })
 
-  const bg = useColorModeValue("cyan.200", "darkcyan")
+  const bg = useColorModeValue("gray.100", "blackAlpha.300")
+
   return (
-    <Container maxW="lg" py={{ base: '12', md: '24' }} px={{ base: '0', sm: '8' }} as="div" borderRadius="md" bg={bg} boxShadow="base" p={3}>
+    <Container
+      maxW="lg"
+      px={{ base: '0', sm: '8' }}
+      as="div"
+      bg={bg}
+      borderRadius="md"
+      boxShadow="outline gray"
+      p={3}
+    >
     <form onSubmit={handleSubmit(async ({ name, description, image, topics }) => {
       const formData = new FormData()
       formData.append("product", image);
@@ -101,7 +92,8 @@ export function ProductForm() {
           })
         })
     })}>
-      <FormControl p={2} isInvalid={!!errors.name}>
+      <Heading>Create Product</Heading>
+      <FormControl isInvalid={!!errors.name}>
         <FormLabel htmlFor="name">Name</FormLabel>
         <Input
           id="name"
@@ -112,7 +104,7 @@ export function ProductForm() {
           {errors.name && errors.name.message}
         </FormErrorMessage>
       </FormControl>
-      <FormControl p={2} isInvalid={!!errors.description}>
+      <FormControl isInvalid={!!errors.description}>
         <FormLabel htmlFor="name">Description</FormLabel>
         <Textarea
           id="description"
@@ -134,13 +126,15 @@ export function ProductForm() {
           <FormErrorMessage>
             {errors.topics?.[idx]?.tag?.message}
           </FormErrorMessage>
-          <Button onClick={() => remove(idx)}>Remove Tag</Button>
+          <Button mt={2} onClick={() => remove(idx)}>Remove Tag</Button>
         </FormControl>
       ))} 
-      <Button mr={2} isDisabled={Object.keys(fields).length >= 4} variant="outline" onClick={() => Object.keys(fields).length < 4 && append({
-        tag: ""
-      })}>Add Tag</Button>
-      <Button ml={2} isLoading={isSubmitting} type="submit" variant="solid">Save</Button>
+      <Flex justify="center" mt={2}>
+        <Button isDisabled={Object.keys(fields).length >= 4} variant="outline" onClick={() => Object.keys(fields).length < 4 && append({
+          tag: ""
+        })}>Add Tag</Button>
+        <Button ml={2} isLoading={isSubmitting} type="submit" variant="solid">Save</Button>
+      </Flex>
     </form> 
     </Container>
   )

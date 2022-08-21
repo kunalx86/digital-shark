@@ -1,6 +1,7 @@
 import { createProtectedRouter } from "./protected-router";
 import * as z from "zod"
 import { Tag } from "@chakra-ui/react";
+import { createProductSchema } from "@schemas/product";
 
 /**
  * Create product
@@ -28,14 +29,7 @@ export const productRouter = createProtectedRouter()
   })
   // TODO: Fix schema
   .mutation("create", {
-    input: z.object({
-      name: z.string().max(255, "Name cannot exceed 255 characters"),
-      description: z.string(),
-      image: z.string().url(),
-      topics: z.array(z.object({
-        tag: z.string()
-      }))
-    }),
+    input: createProductSchema,
     async resolve({ ctx, input }) {
       const { name, description, topics, image } = input;
       const product = await ctx.prisma.product.create({
@@ -50,7 +44,7 @@ export const productRouter = createProtectedRouter()
           },
           fromId: ctx.session.user.id,
           ownerId: ctx.session.user.id,
-          image
+          image: image as string
         }
       });
       return product;

@@ -22,6 +22,7 @@
     "@components": ".next/components",
     "@env": ".next/env",
     "@utils": ".next/utils",
+    "@schemas": ".next/schemas",
     "@pages": ".next/server/pages"
   },
   "dependencies": {
