@@ -3,7 +3,7 @@ import { FaGithub, FaLinkedin } from "react-icons/fa"
 
 export function Footer() {
   return (
-    <Container maxW={["90%", "90%", "60%", "60%"]} position="relative" bottom="0" left="0" right="0" mt="auto" as="footer" role="contentinfo">
+    <Container as="footer" maxW={["90%", "90%", "60%", "60%"]} position="relative" bottom="0" left="0" right="0" mt="auto" role="footer">
       <Stack
         spacing="8"
         direction={{ base: 'row', md: 'row' }}

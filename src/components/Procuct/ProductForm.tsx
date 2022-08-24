@@ -37,6 +37,7 @@ export function ProductForm() {
       minLength: 0
     }
   })
+  const utils = trpc.useContext();
   const toast = useToast();
   const { mutateAsync } = trpc.useMutation(["product.create"], {
     onError(error, _, __) {
@@ -52,6 +53,8 @@ export function ProductForm() {
         title: "Product creation successful",
         description: `Product with name ${data.name} successfully created`
       })
+      utils.invalidateQueries(["product.owner"])
+      utils.invalidateQueries(["profile.stats"])
       reset()
     },
   })

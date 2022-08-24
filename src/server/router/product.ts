@@ -1,6 +1,5 @@
 import { createProtectedRouter } from "./protected-router";
 import * as z from "zod"
-import { Tag } from "@chakra-ui/react";
 import { createProductSchema } from "@schemas/product";
 
 /**
@@ -27,7 +26,6 @@ export const productRouter = createProtectedRouter()
       return products;
     }
   })
-  // TODO: Fix schema
   .mutation("create", {
     input: createProductSchema,
     async resolve({ ctx, input }) {

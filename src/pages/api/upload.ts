@@ -4,12 +4,11 @@ import { readFile } from "fs/promises"
 import { env } from "@env/server.mjs";
 import { unstable_getServerSession } from "next-auth";
 import { authOptions } from "@pages/api/auth/[...nextauth]"
-import formidable, { File } from "formidable"
+import formidable from "formidable"
 
-
+const expiresIn = 60 * 60 * 24 * 30 * 365 * 10;
 const supabaseClient = createClient(env.SUPABASE_URL, env.SUPABASE_SECRET)
 
-// TODO: Complete file upload
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await unstable_getServerSession(req, res, authOptions)
   if (!session) {
@@ -18,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
   }
 
-  const { files, fields } = await new Promise<{
+  const { files } = await new Promise<{
     fields: formidable.Fields
     files: formidable.Files
   }>((res, rej) => {
@@ -39,13 +38,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     .from("product-images")
     .upload(`${Date.now()}-${productFile.newFilename}.${productFile.originalFilename?.split('.').at(-1)}`, productImage)
   
-  if (error) return res.status(500).json({ error })
+  if (!data && error) return res.status(500).json({ error })
 
-  const { publicURL, error: _error } = await supabaseClient.storage
-    .from('product-image')
-    .getPublicUrl(data?.Key ?? "")
+  const { publicURL, error: _error } = supabaseClient.storage
+    .from("product-images")
+    .getPublicUrl(data?.Key.split('/')[1] ?? "")
 
-  if (_error) return res.status(500).json({ error: _error })
+  if (publicURL === null && _error) return res.status(500).json({ error: _error })
 
   res.status(201).json({ publicURL })
 }

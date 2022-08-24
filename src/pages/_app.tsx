@@ -9,6 +9,7 @@ import { ChakraProvider, Spinner } from "@chakra-ui/react";
 import Layout from "@components/Layout";
 import theme from "src/theme"
 import { ReactNode } from "react";
+import { ReactQueryDevtools } from "react-query/devtools"
 
 function AuthLoader({ children }: { children: ReactNode }) {
   const { status } = useSession();
@@ -30,6 +31,7 @@ const MyApp: AppType = ({
           <AuthLoader>
             <Component {...pageProps} />
           </AuthLoader>
+          <ReactQueryDevtools initialIsOpen={false} />
         </Layout>
       </SessionProvider>
     </ChakraProvider>
