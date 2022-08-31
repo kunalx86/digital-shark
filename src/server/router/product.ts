@@ -20,6 +20,9 @@ export const productRouter = createProtectedRouter()
         where: {
           owner: ctx.session.user,
           to: input.auction ? ctx.session.user : undefined
+        },
+        include: {
+          auction: true
         }
       })
 

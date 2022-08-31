@@ -86,7 +86,7 @@ model Auction {
   product         Product  @relation("auction", fields: [productId], references: [id])
   basePrice       Int
   startTime       DateTime
-  TimeZone        String?  @db.VarChar(255)
+  timeZone        String?  @db.VarChar(255)
   highestBid      Int?
   highestBidderId Int?
   highestBidder   User?    @relation("highest-bidder", fields: [highestBidderId], references: [id])

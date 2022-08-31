@@ -1,10 +1,17 @@
-import { Flex, Stack, Heading, Box, Image, Text, Button } from "@chakra-ui/react";
-import { Product } from "@prisma/client";
+import { Flex, Stack, Heading, Box, Image, Text, Button, Input, InputGroup, InputRightElement, FormControl, FormLabel, FormErrorMessage, useToast, InputLeftElement } from "@chakra-ui/react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Auction, Product } from "@prisma/client";
+import { trpc } from "@utils/trpc";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { FaClock, FaRupeeSign } from "react-icons/fa";
+import { z } from "zod";
+
 
 export function Product({ product }: {
-  product: Product
+  product: Product & {
+    auction: Auction | null
+  }
 }) {
   const [showForm, setShowForm] = useState(false)
   return (
@@ -24,16 +31,20 @@ export function Product({ product }: {
           <Text>
             {product.description}
           </Text>
-          {
-            product.toId === null
-            ? <Button onClick={() => setShowForm(s => !s)} mt={2} variant="outline">Auction Product</Button>
-            : null
-          }
-          {
-            showForm
-            ? <AuctionForm id={product.id} />
-            : null
-          }
+          <Flex align="center" direction="column">
+            {
+              product.toId === null
+              ? product.auction === null
+              ? <Button onClick={() => setShowForm(s => !s)} mt={2} variant="outline">Auction Product</Button>
+              : <Text><>Product will be auctioned on {product.auction.startTime.toUTCString()}</></Text>
+              : null
+            }
+            {
+              showForm
+              ? <AuctionForm disableForm={() => setShowForm(false)} id={product.id} />
+              : null
+            }
+          </Flex>
         </Box>
       </Stack>
     </Flex>
@@ -41,17 +52,101 @@ export function Product({ product }: {
 }
 
 type FormData = {
-  startDate: Date,
-  timeZone: string
+  startTime: string,
+  basePrice: string
 }
 
-function AuctionForm({  }: {
-  id: number
+const createAuctionSchema = z.object({
+  startTime: z.string()
+    .refine(dateTime => dateTime !== null || dateTime !== undefined || dateTime !== "", {
+      message: "Date cannot be empty"
+    })
+    .refine(dateTime => {
+      const utcDate = new Date(Date.parse(dateTime)).toUTCString().split("GMT")[0] as string;
+      const date = new Date(Date.parse(utcDate) - Date.now())
+      if (date.getFullYear() < 1970 || date.getMinutes() < 10) {
+        return false
+      }
+      return true
+    }, {
+      message: "Date should be atleast 10 minutes from now"
+    }),
+  basePrice: z.string({
+      required_error: "Base Price is needed"
+    })
+    .regex(/^\d+$/, "Base Price should be a number")
+})
+
+function AuctionForm({ id, disableForm }: {
+  id: number,
+  disableForm: () => void
 }) {
-  const {} = useForm<FormData>();
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<FormData>({
+    resolver: zodResolver(createAuctionSchema)
+  });
+  const utils = trpc.useContext()
+  const toast = useToast()
+  const { mutateAsync } = trpc.useMutation(["auction.auction-product"], {
+    onError(error, _, __) {
+      toast({
+        status: "error",
+        title: "Product auction failed",
+        description: error.message
+      })
+    },
+    onSuccess(data, _, __) {
+      toast({
+        status: "success",
+        title: "Product auction successful",
+        description: `Product with name ${data.product.name} will be auctioned on ${data.startTime}`
+      })
+      utils.invalidateQueries(["product.owner"])
+      reset()
+      disableForm()
+    },
+  })
   return (
-    <form>
-      
+    <form onSubmit={handleSubmit(async ({ startTime, basePrice }) => {
+      await mutateAsync({
+        productId: id,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        startTime,
+        basePrice: parseInt(basePrice, 10)
+      }) 
+    })}>
+      <FormControl p={2} isInvalid={!!errors.startTime}>
+        <FormLabel>Start Time of Auction</FormLabel>
+        <InputGroup>
+          <Input
+            id="startDate"
+            type="datetime-local"
+            {...register("startTime")}
+          />
+          <InputRightElement>
+            <FaClock />
+          </InputRightElement>
+        </InputGroup>
+        <FormErrorMessage>
+          {errors.startTime ? errors.startTime.message : null}
+        </FormErrorMessage>
+      </FormControl>
+      <FormControl p={2} isInvalid={!!errors.basePrice}>
+        <FormLabel>Base Price</FormLabel>
+        <InputGroup>
+          <InputLeftElement>
+            <FaRupeeSign />
+          </InputLeftElement>
+          <Input
+            id="basePrice"
+            type="number"
+            {...register("basePrice")}
+          />
+        </InputGroup>
+        <FormErrorMessage>
+          {errors.basePrice ? errors.basePrice.message : null}
+        </FormErrorMessage>
+      </FormControl>
+      <Button type="submit" variant="solid">Auction</Button>
     </form>
   )
 }
