@@ -32,6 +32,12 @@ function DiscordLogo() {
   )
 }
 
+function Auth0Logo() {
+  return (
+    <Image width="28px" height="28px" alt="Auth0 Logo" src="/logos/a-logo.svg" />
+  )
+}
+
 export function Signup({ providers }: { providers: Record<LiteralUnion<BuiltInProviderType, string>, ClientSafeProvider> | null }) {
   const { query } = useRouter()
   let callbackUrl: string | undefined = undefined;
@@ -76,6 +82,11 @@ export function Signup({ providers }: { providers: Record<LiteralUnion<BuiltInPr
             })} m={3} _hover={{
               bg: "gray.200"
             }} bg="white" color="#5865F2" w="60%" variant="solid" leftIcon={<DiscordLogo />}>Discord</Button>
+            <Button onClick={() => signIn(providers?.auth0.id, {
+              callbackUrl
+            })} m={3} _hover={{
+              bg: "gray.200"
+            }} bg="white" color="#eb5424" w="60%" variant="solid" leftIcon={<Auth0Logo />}>Auth0</Button>
           </Flex>
         </Box>
       </Stack>
