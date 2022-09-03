@@ -36,7 +36,7 @@ export function Product({ product }: {
           <Text>
             {product.description}
           </Text>
-          <Flex align="center" direction="column">
+          <Flex position="relative" align="center" direction="column">
             {
               product.toId === null
               ? product.auction === null
@@ -111,6 +111,7 @@ function AuctionForm({ id, disableForm }: {
     },
   })
   return (
+    <Box w="auto">
     <form onSubmit={handleSubmit(async ({ startTime, basePrice }) => {
       await mutateAsync({
         productId: id,
@@ -153,5 +154,6 @@ function AuctionForm({ id, disableForm }: {
       </FormControl>
       <Button type="submit" variant="solid">Auction</Button>
     </form>
+    </Box>
   )
 }

@@ -1,5 +1,7 @@
 import { createProtectedRouter } from "./protected-router";
 import * as z from "zod"
+import dayjs from "dayjs";
+import { TRPCError } from "@trpc/server";
 
 export const auctionRouter = createProtectedRouter()
   .mutation("auction-product", {
@@ -55,5 +57,44 @@ export const auctionRouter = createProtectedRouter()
         }
       })
       return auction;
+    }
+  })
+  .mutation("mark-unsold", {
+    input: z.number({
+      required_error: "Auction ID is necessary"
+    }),
+    async resolve({ ctx, input }) {
+      const auction = await ctx.prisma.auction.findFirstOrThrow({
+        where: {
+          id: input,
+          sold: null,
+        },
+        include: {
+          product: {
+            include: {
+              from: true
+            }
+          }
+        }
+      })
+      const diff = dayjs(auction.startTime).diff() < (-1000) * 10 // This means more than 10 minutes have been passed since startTime
+      if (!diff) throw new TRPCError({
+        message: "Product Auction has not expired yet",
+        code: "BAD_REQUEST"
+      })
+      return await ctx.prisma.auction.update({
+        where: {
+          id: auction.id
+        },
+        data: {
+          sold: false,
+          product: {
+            update: {
+              ownerId: auction.product.fromId,
+              toId: auction.product.toId
+            }
+          }
+        }
+      });
     }
   })

@@ -90,7 +90,7 @@ model Auction {
   highestBid      Int?
   highestBidderId Int?
   highestBidder   User?    @relation("highest-bidder", fields: [highestBidderId], references: [id])
-  sold            Boolean  @default(false)
+  sold            Boolean?
 }
 
 model VerificationToken {

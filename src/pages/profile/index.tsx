@@ -1,4 +1,4 @@
-import { Flex, Tab, Image, TabList, TabPanel, TabPanels, Text, Tabs, useColorModeValue, Box, Spinner } from "@chakra-ui/react"
+import { Flex, Tab, Image, TabList, TabPanel, TabPanels, Text, Tabs, useColorModeValue, Box, Spinner, Button, useToast } from "@chakra-ui/react"
 import { ProductForm } from "@components/Procuct/ProductForm"
 import { ProductList } from "@components/Procuct/ProductList"
 import { authOptions } from "@pages/api/auth/[...nextauth]"
@@ -11,7 +11,24 @@ import Head from "next/head"
 function UserCard({ user }: {
   user: User
 }) {
+  const toast = useToast()
+  const utils = trpc.useContext()
   const { isLoading, data } = trpc.useQuery(["profile.stats"])
+  const { mutate } = trpc.useMutation(["profile.give-coins"], {
+    onError(error, variables, context) {
+      toast({
+        status: "error",
+        description: error.message
+      })
+    },
+    onSuccess(data, _, __) {
+      toast({
+        status: "info",
+        description: "Successfully added coins!"
+      })
+      utils.invalidateQueries(["profile.stats"])
+    },
+  })
   return (
     <Flex
       h='365px'
@@ -43,6 +60,10 @@ function UserCard({ user }: {
           fontSize='xl'>
             {user.name}
         </Text>
+        <Text align="center">
+          {data?.at(0)} Coins
+        </Text>
+        <Button onClick={() => mutate()}>Get Coins</Button>
       </Flex>
       <Flex justify='space-between' w='100%' px='36px'>
         {
@@ -55,7 +76,7 @@ function UserCard({ user }: {
                 fontWeight='600'
                 fontSize='xl'
                 textAlign='center'>
-                {data?.at(0)}
+                {data?.at(1)}
               </Text>
               <Text align="center" fontWeight='500'>
                 Products Owned
@@ -67,7 +88,7 @@ function UserCard({ user }: {
                 fontSize='xl'
                 textAlign='center'
               >
-                {data?.at(1)}
+                {data?.at(2)}
               </Text>
               <Text align="center" fontWeight='500'>
                 Products Auctioned
@@ -79,7 +100,7 @@ function UserCard({ user }: {
                 fontSize='xl'
                 textAlign='center'
               >
-                {data?.at(1)}
+                {data?.at(3)}
               </Text>
               <Text align="center" fontWeight='500'>
                 Products won

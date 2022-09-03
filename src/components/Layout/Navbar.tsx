@@ -1,4 +1,4 @@
-import { Button, Box, Container, HStack, useColorModeValue, Avatar, Spacer, useColorMode, Image } from "@chakra-ui/react";
+import { Button, Box, Container, HStack, useColorModeValue, Avatar, Spacer, useColorMode, Image, Divider } from "@chakra-ui/react";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -10,7 +10,7 @@ export function Navbar() {
   const { colorMode, toggleColorMode } = useColorMode()
   return (
     <Container ml="auto" mr="auto" as="nav" maxW={["90%", "90%", "60%", "60%"]} pb={{ base: '12', md: '24' }}>
-      <Box py="5" bg="bg-surface" boxShadow={useColorModeValue('sm', 'sm-dark')}>
+      <Box py="5" bg="bg-surface" boxShadow={useColorModeValue('sm', 'dark-sm')}>
         <HStack padding="0" spacing="10" justify="space-between">
           {status === "unauthenticated" && (
             <>
@@ -36,6 +36,7 @@ export function Navbar() {
           )}
         </HStack>
       </Box>
+      <Divider />
     </Container>
   )
 }

@@ -1,9 +1,11 @@
-import { Button, Flex, Heading, Image, Spinner, Text, useToast } from "@chakra-ui/react";
+import { Button, Heading, Image, Spinner, Stack, Text, useToast } from "@chakra-ui/react";
 import Head from "next/head";
 import dayjs from "dayjs";
 import { useSession } from "next-auth/react";
 import { trpc } from "@utils/trpc";
 import { useRouter } from "next/router";
+import { Auction } from "@prisma/client";
+import { useEffect, useState } from "react";
 
 function ProductPage() {
   const session = useSession()
@@ -37,11 +39,11 @@ function ProductPage() {
   }
   if (product === null || product === undefined) {
     return (
-      <Flex>
+      <Stack>
         <Heading>
           No such Product
         </Heading>
-      </Flex>
+      </Stack>
     )
   }
   const date = dayjs(product.auction?.startTime).format("DD/MM/YYYY HH:mm")
@@ -50,7 +52,7 @@ function ProductPage() {
       <Head>
         <title>Product {product.name}</title>
       </Head>
-      <Flex align="center" direction="column">
+      <Stack spacing={4} align="center" direction="column">
         <Heading>
           {product.name}
         </Heading>
@@ -72,19 +74,48 @@ function ProductPage() {
             </Text>
           : null
         }
-        {
-          product.ownerId === session.data?.user?.id || 
-          product.fromId === session.data?.user?.id ||
-          product.toId === session.data?.user?.id
-          ? null
-          : <Button onClick={() => {
-              mutate(product.id)
-            }} variant="outline" disabled={session.status === "unauthenticated"}>
-              {subscribed ? "Unsubscribe" : "Susbrcribe"}
-            </Button>
-        }
-      </Flex>
+        <Stack direction="row" spacing={2} mt={2}>
+          {
+            product.ownerId === session.data?.user?.id || 
+            product.fromId === session.data?.user?.id ||
+            product.toId === session.data?.user?.id
+            ? null
+            : <Button onClick={() => {
+                mutate(product.id)
+              }} variant="outline" disabled={session.status === "unauthenticated"}>
+                {subscribed ? "Unsubscribe" : "Susbrcribe"}
+              </Button>
+          }
+          {
+            product.auction !== null && !product.auction.sold
+            ? <AuctionView auction={product.auction} />
+            : null
+          }
+        </Stack>
+      </Stack>
     </>
+  )
+}
+
+function AuctionView({ auction }: {
+  auction: Auction
+}) {
+  const [toSell, setToSell] = useState(false)
+
+  useEffect(() => {
+    const diff = dayjs(auction.startTime).diff() < (-1000) * 10 // This means more than 10 minutes have been passed since startTime
+    if (diff && auction.sold === null) {
+      // TODO: Trigger a mutation to mark sold as false? This won't work coz react will fire this twice
+      setToSell(false)
+    } else if (!diff) {
+      setToSell(true)
+    }
+  }, [auction])
+
+  return (
+    <Stack>
+      <Button disabled={!toSell} variant="outline">Join bidding room</Button>
+    </Stack>
   )
 }
 
