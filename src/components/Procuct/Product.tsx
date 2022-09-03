@@ -1,7 +1,9 @@
 import { Flex, Stack, Heading, Box, Image, Text, Button, Input, InputGroup, InputRightElement, FormControl, FormLabel, FormErrorMessage, useToast, InputLeftElement } from "@chakra-ui/react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Auction, Product } from "@prisma/client";
+import { Auction, Product as _Product } from "@prisma/client";
 import { trpc } from "@utils/trpc";
+import dayjs from "dayjs";
+import { useRouter } from "next/router";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { FaClock, FaRupeeSign } from "react-icons/fa";
@@ -9,15 +11,18 @@ import { z } from "zod";
 
 
 export function Product({ product }: {
-  product: Product & {
+  product: _Product & {
     auction: Auction | null
   }
 }) {
   const [showForm, setShowForm] = useState(false)
+  const router = useRouter()
+  const date = dayjs(product.auction?.startTime).format('DD-MM-YYYY HH:mm')
   return (
     <Flex direction="row" align="center">
       <Stack direction="row">
         <Image
+          onClick={() => router.push(`/product/${product.id}`)} 
           rounded="lg"
           maxW={["50%", "50%", "60%", "60%"]}
           maxH={["50%", "50%", "60%", "60%"]}
@@ -36,7 +41,7 @@ export function Product({ product }: {
               product.toId === null
               ? product.auction === null
               ? <Button onClick={() => setShowForm(s => !s)} mt={2} variant="outline">Auction Product</Button>
-              : <Text><>Product will be auctioned on {product.auction.startTime.toUTCString()}</></Text>
+              : <Text><>Product will be auctioned on {date}</></Text>
               : null
             }
             {
@@ -100,7 +105,7 @@ function AuctionForm({ id, disableForm }: {
         title: "Product auction successful",
         description: `Product with name ${data.product.name} will be auctioned on ${data.startTime}`
       })
-      utils.invalidateQueries(["product.owner"])
+      utils.invalidateQueries(["product.products"])
       reset()
       disableForm()
     },

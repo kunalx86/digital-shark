@@ -2,8 +2,10 @@ import { Stack, Heading, Flex, Box, Spinner, Image, Text } from "@chakra-ui/reac
 import { trpc } from "@utils/trpc";
 import { Product } from "./Product";
 
-export function ProductList() {
-  const { isLoading, data: products } = trpc.useQuery(["product.owner", {}])
+export function ProductList({ subscribed = false }: {
+  subscribed?: boolean
+}) {
+  const { isLoading, data: products } = trpc.useQuery(["product.products", { subscribed }])
   return (
   <Box
     maxW={{ base: '3xl', lg: '7xl' }}

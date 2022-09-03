@@ -17,6 +17,9 @@ export const serverSchema = z.object({
   AUTH0_CLIENT_ID: z.string(),
   AUTH0_ISSUER: z.string(),
   AUTH0_CLIENT_SECRET: z.string(),
+  PUSHER_APPID: z.string(),
+  PUSHER_KEY: z.string(),
+  PUSHER_SECRET: z.string(),
   SUPABASE_URL: z.string(),
   SUPABASE_SECRET: z.string()
 });

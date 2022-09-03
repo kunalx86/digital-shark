@@ -105,13 +105,13 @@ function Profile() {
           <TabList>
             <Tab p={1}>Your Products</Tab>
             <Tab p={1}>Products on Auction</Tab>
-            <Tab p={1}>Following Products</Tab>
+            <Tab p={1}>Subscribed Products</Tab>
             <Tab p={1}>Create Products</Tab>
           </TabList>
           <TabPanels>
             <TabPanel><ProductList /></TabPanel>
             <TabPanel>Your Product</TabPanel>
-            <TabPanel>Your Product</TabPanel>
+            <TabPanel><ProductList subscribed /></TabPanel>
             <TabPanel><ProductForm /></TabPanel>
           </TabPanels>
         </Tabs>
