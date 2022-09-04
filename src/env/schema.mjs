@@ -20,6 +20,7 @@ export const serverSchema = z.object({
   PUSHER_APPID: z.string(),
   PUSHER_KEY: z.string(),
   PUSHER_SECRET: z.string(),
+  REDIS_URL: z.string(),
   SUPABASE_URL: z.string(),
   SUPABASE_SECRET: z.string()
 });

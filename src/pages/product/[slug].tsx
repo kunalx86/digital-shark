@@ -101,20 +101,23 @@ function AuctionView({ auction }: {
   auction: Auction
 }) {
   const [toSell, setToSell] = useState(false)
+  const { mutate } = trpc.useMutation(["auction.mark-unsold"])
+  const router = useRouter()
 
   useEffect(() => {
     const diff = dayjs(auction.startTime).diff() < (-1000) * 10 // This means more than 10 minutes have been passed since startTime
     if (diff && auction.sold === null) {
       // TODO: Trigger a mutation to mark sold as false? This won't work coz react will fire this twice
+      mutate(auction.id)
       setToSell(false)
     } else if (!diff) {
       setToSell(true)
     }
-  }, [auction])
+  }, [auction, mutate])
 
   return (
     <Stack>
-      <Button disabled={!toSell} variant="outline">Join bidding room</Button>
+      <Button disabled={!toSell} onClick={() => router.push(`/auction/${auction.id}`)} variant="outline">Join bidding room</Button>
     </Stack>
   )
 }

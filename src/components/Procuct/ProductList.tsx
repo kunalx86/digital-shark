@@ -1,4 +1,4 @@
-import { Stack, Heading, Flex, Box, Spinner, Image, Text } from "@chakra-ui/react";
+import { Stack, Heading, Box, Spinner } from "@chakra-ui/react";
 import { trpc } from "@utils/trpc";
 import { Product } from "./Product";
 
@@ -20,7 +20,7 @@ export function ProductList({ subscribed = false }: {
     >
       <Stack spacing={{ base: '8', md: '10' }} flex="2">
         <Heading fontSize="2xl" fontWeight="extrabold">
-          Products that you own
+          Products that you {subscribed ? "Subscribed" : "Own"}
         </Heading>
         <Stack spacing="6">
           {

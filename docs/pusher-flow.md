@@ -12,4 +12,3 @@ authorize only if it is possible to join that auction
 
 
 ## Client Side
-- [Todo]

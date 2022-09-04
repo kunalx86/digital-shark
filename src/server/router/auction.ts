@@ -2,6 +2,8 @@ import { createProtectedRouter } from "./protected-router";
 import * as z from "zod"
 import dayjs from "dayjs";
 import { TRPCError } from "@trpc/server";
+import { redisClient } from "@utils/redis";
+import { pusherServer } from "@utils/pusher";
 
 export const auctionRouter = createProtectedRouter()
   .mutation("auction-product", {
@@ -96,5 +98,56 @@ export const auctionRouter = createProtectedRouter()
           }
         }
       });
+    }
+  })
+  .mutation("bid", {
+    input: z.object({
+      price: z.number({
+        required_error: "Base Price is needed"
+      }),
+      id: z.number({
+        required_error: "Auction ID is needed"
+      })
+    }),
+    async resolve({ ctx, input }) {
+      const auction = await ctx.prisma.auction.findFirstOrThrow({
+        where: {
+          id: input.id,
+          sold: null
+        }
+      })
+
+      const status = await redisClient.get(`channel-${auction.id}`)
+      const isRoom = status !== undefined && status === "true"
+
+      if (!isRoom) {
+        throw new TRPCError({
+          message: "Not allowed to bid here",
+          code: "BAD_REQUEST"
+        })
+      }
+
+      const result = await redisClient.lIndex(`bid-${auction.id}`, -1) ?? ""
+      const topPrice = parseInt(result?.split("$")[1]!, 10)
+     
+      if (topPrice >= input.price) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Bid higher!"
+        })
+      }
+
+      await redisClient.rPush(`bid-${auction.id}`, `${ctx.session.user.id}$${input.price}`)
+      
+      // TODO: Calculate timestamps, 5 sec from now and then 15 secs from now
+      const timerStart = dayjs().add(5, "seconds").toDate().getUTCDate()
+      const timerEnd = dayjs().add(15, "seconds").toDate().getUTCDate()
+
+      await pusherServer.trigger(`presence-${auction.id}`, "new-bid", {
+        bidPrice: input.price,
+        bidderId: input.id,
+        timerStart,
+        timerEnd
+      })
     }
   })
