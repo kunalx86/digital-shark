@@ -13,12 +13,8 @@ export const auctionRouter = createProtectedRouter()
           message: "Date cannot be empty"
         })
         .refine(dateTime => {
-          const utcDate = new Date(Date.parse(dateTime)).toUTCString().split("GMT")[0] as string;
-          const date = new Date(Date.parse(utcDate) - Date.now())
-          if (date.getFullYear() < 1970 || date.getUTCMinutes() < 10) {
-            return false
-          }
-          return true
+          const diff = dayjs(dateTime).diff(dayjs(), "minutes", true)
+          return diff > 10
         }, {
           message: "Date should be atleast 10 minutes from now"
         }),
@@ -140,14 +136,26 @@ export const auctionRouter = createProtectedRouter()
       await redisClient.rPush(`bid-${auction.id}`, `${ctx.session.user.id}$${input.price}`)
       
       // TODO: Calculate timestamps, 5 sec from now and then 15 secs from now
-      const timerStart = dayjs().add(5, "seconds").toDate().getUTCDate()
-      const timerEnd = dayjs().add(15, "seconds").toDate().getUTCDate()
+      const timerStart = dayjs().add(5, "seconds").toDate().getTime()
+      const timerEnd = dayjs().add(15, "seconds").toDate().getTime()
 
       await pusherServer.trigger(`presence-${auction.id}`, "new-bid", {
         bidPrice: input.price,
         bidderId: input.id,
         timerStart,
         timerEnd
+      })
+    }
+  })
+  .query("get", {
+    input: z.number({
+      required_error: "Auction ID is required"
+    }),
+    async resolve({ ctx, input }) {
+      return await ctx.prisma.auction.findUniqueOrThrow({
+        where: {
+          id: input
+        }
       })
     }
   })

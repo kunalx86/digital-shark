@@ -23,6 +23,8 @@
     "@env": ".next/env",
     "@utils": ".next/utils",
     "@schemas": ".next/schemas",
+    "@hooks": ".next/hooks",
+    "@providers": ".next/providers",
     "@pages": ".next/server/pages"
   },
   "dependencies": {

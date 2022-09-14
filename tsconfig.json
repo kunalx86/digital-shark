@@ -26,6 +26,12 @@
       "@components/*": [
         "src/components/*"
       ],
+      "@hooks/*": [
+        "src/hooks/*"
+      ],
+      "@providers/*": [
+        "src/providers/*"
+      ],
       "@pages/*": [
         "src/pages/*"
       ],

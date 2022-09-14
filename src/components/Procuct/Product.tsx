@@ -67,12 +67,8 @@ const createAuctionSchema = z.object({
       message: "Date cannot be empty"
     })
     .refine(dateTime => {
-      const utcDate = new Date(Date.parse(dateTime)).toUTCString().split("GMT")[0] as string;
-      const date = new Date(Date.parse(utcDate) - Date.now())
-      if (date.getFullYear() < 1970 || date.getMinutes() < 10) {
-        return false
-      }
-      return true
+      const diff = dayjs(dateTime).diff(dayjs(), "minutes", true)
+      return diff > 10;
     }, {
       message: "Date should be atleast 10 minutes from now"
     }),
