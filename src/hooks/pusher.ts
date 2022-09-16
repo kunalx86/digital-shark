@@ -18,8 +18,15 @@ function useSubscribeChannel<T>(event: string, callback: (data: T) => void) {
   }, [callback])
 
   useEffect(() => {
+    const reference = (data: T) => {
+      ref.current(data)
+    }
     if (presenceChannel !== undefined) {
-      presenceChannel.bind(event, (data: T) => ref.current(data))
+      presenceChannel.bind(event, reference)
+    }
+
+    return () => {
+      presenceChannel?.unbind(event, reference)
     }
   }, [presenceChannel, event])
 }

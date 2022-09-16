@@ -100,18 +100,20 @@ function ProductPage() {
 function AuctionView({ auction }: {
   auction: Auction
 }) {
-  const [toSell, setToSell] = useState(false)
+  const [toSell, setToSell] = useState(true)
   const { mutate } = trpc.useMutation(["auction.mark-unsold"])
   const router = useRouter()
 
   useEffect(() => {
-    const diff = dayjs(auction.startTime).diff() < (-1000) * 10 // This means more than 10 minutes have been passed since startTime
-    if (diff && auction.sold === null) {
-      // TODO: Trigger a mutation to mark sold as false? This won't work coz react will fire this twice
-      mutate(auction.id)
-      setToSell(false)
-    } else if (!diff) {
-      setToSell(true)
+    if (false) {
+      const diff = dayjs(auction.startTime).diff() < (-1000) * 10 // This means more than 10 minutes have been passed since startTime
+      if (diff && auction.sold === null) {
+        // TODO: Trigger a mutation to mark sold as false? This won't work coz react will fire this twice
+        mutate(auction.id)
+        setToSell(false)
+      } else if (!diff) {
+        setToSell(true)
+      }
     }
   }, [auction, mutate])
 

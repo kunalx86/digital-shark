@@ -5,6 +5,7 @@ import { authOptions } from "../auth/[...nextauth]";
 import { prisma } from "@server/db/client"
 import dayjs from "dayjs";
 import { redisClient } from "@utils/redis";
+import { env } from "@env/server.mjs";
 
 interface AuthChannelApiRequest extends NextApiRequest {
   body: {
@@ -41,9 +42,11 @@ export default async function pusherAuthChannelHandler(
     return res.status(400).send(`No auction by the id of ${channel} exists`)
   }
 
-  const diff = dayjs(auction.startTime).diff() < (-1000) * 10
-  if (auction.sold !== null || !diff) {
-    return res.status(400).send("Cannot join the auction")
+  if (env.NODE_ENV === "production") {
+    const diff = dayjs(auction.startTime).diff() < (-1000) * 10
+    if (auction.sold !== null || !diff) {
+      return res.status(400).send("Cannot join the auction")
+    }
   }
   const status = await redisClient.get(`channel-${auction.id}`)
   const isRoom = status !== undefined && status === "true"

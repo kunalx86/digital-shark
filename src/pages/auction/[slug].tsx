@@ -6,6 +6,7 @@ import { useRouter } from "next/router"
 import { useCountDown } from "@hooks/countdown"
 import { PusherProvider } from "@providers/PusherProvider"
 import { useSession } from "next-auth/react"
+import { AuctionContainer } from "@components/Auction/AuctionContainer"
 
 function AuctionPage() {
   const router = useRouter()
@@ -37,9 +38,11 @@ function CountDown({ auction }: {
     )
   }
 
-  if (expired) {
+  // TODO: Remove in PROD
+  if (expired || true) {
     return (
       <PusherProvider slug={auction.id.toString()} id={data.user.id}>
+        <AuctionContainer />
       </PusherProvider>
     )
   }
