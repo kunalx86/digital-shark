@@ -133,11 +133,11 @@ export const auctionRouter = createProtectedRouter()
         })
       }
 
-      await redisClient.rPush(`bid-${auction.id}`, `${ctx.session.user.id}$${input.price}`)
-      
       // TODO: Calculate timestamps, 5 sec from now and then 15 secs from now
       const timerStart = dayjs().add(5, "seconds").toDate().getTime()
       const timerEnd = dayjs().add(15, "seconds").toDate().getTime()
+
+      await redisClient.rPush(`bid-${auction.id}`, `${ctx.session.user.id}$${input.price}${timerStart}${timerEnd}`)
 
       await pusherServer.trigger(`presence-${auction.id}`, "new-bid", {
         bidPrice: input.price,
@@ -145,6 +145,21 @@ export const auctionRouter = createProtectedRouter()
         timerStart,
         timerEnd
       })
+    }
+  })
+  .query("bid-status", {
+    input: z.string({
+      required_error: "Auction ID is necessary"
+    }),
+    async resolve({ input }) {
+      return redisClient.lRange(`presence-${input}`, 1, -1)
+        .then(bids => bids.map(bid => bid.split("$")) as [string, string, string, string][])
+        .then(bids => bids.map(([user, price, timerStart, timerEnd]) => ({
+          user,
+          price,
+          timerStart,
+          timerEnd
+        })))
     }
   })
   .query("get", {
@@ -155,6 +170,9 @@ export const auctionRouter = createProtectedRouter()
       return await ctx.prisma.auction.findUniqueOrThrow({
         where: {
           id: input
+        },
+        include: {
+          product: true
         }
       })
     }

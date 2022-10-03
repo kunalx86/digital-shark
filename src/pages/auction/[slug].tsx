@@ -1,5 +1,5 @@
 import { Flex, Spinner, Stack, Text } from "@chakra-ui/react"
-import { Auction } from "@prisma/client"
+import { Auction, Product } from "@prisma/client"
 import { trpc } from "@utils/trpc"
 import dayjs from "dayjs"
 import { useRouter } from "next/router"
@@ -7,6 +7,7 @@ import { useCountDown } from "@hooks/countdown"
 import { PusherProvider } from "@providers/PusherProvider"
 import { useSession } from "next-auth/react"
 import { AuctionContainer } from "@components/Auction/AuctionContainer"
+import Head from "next/head"
 
 function AuctionPage() {
   const router = useRouter()
@@ -18,14 +19,21 @@ function AuctionPage() {
   }
 
   return (
-    <Flex direction="column">
-      <CountDown auction={auction} />
-    </Flex>
+    <>
+      <Head>
+        <title>Auction of {auction.product.name}</title>
+      </Head>
+      <Flex direction="column">
+        <CountDown auction={auction} />
+      </Flex>
+    </>
   )
 }
 
 function CountDown({ auction }: {
-  auction: Auction
+  auction: Auction & {
+    product: Product
+  }
 }) {
   const { expired, days, hours, minutes, seconds } = useCountDown(dayjs(auction.startTime).toDate().getTime())
   const { data, status } = useSession()
@@ -42,7 +50,7 @@ function CountDown({ auction }: {
   if (expired || true) {
     return (
       <PusherProvider slug={auction.id.toString()} id={data.user.id}>
-        <AuctionContainer />
+        <AuctionContainer auction={auction} />
       </PusherProvider>
     )
   }

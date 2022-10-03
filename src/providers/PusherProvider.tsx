@@ -2,10 +2,16 @@ import { env } from "@env/client.mjs";
 import Pusher, { PresenceChannel } from "pusher-js";
 import { createContext, ReactNode, useEffect, useState } from "react";
 
+export type Member = {
+  id: number,
+  image: string,
+  name: string
+}
+
 const PusherContext = createContext<{
   pusherClient: Pusher | undefined,
   presenceChannel: PresenceChannel | undefined,
-  members: Map<string, any> | undefined
+  members: { [s: string]: Member } | undefined // Object.entries won't cooperate with Map<string, T>
 } | undefined>(undefined)
 
 function createPusher(user_id: string) {
@@ -30,7 +36,7 @@ function PusherProvider({ slug, id, children }: {
 }) {
   const [pusherClient, setPusher] = useState<Pusher>();
   const [presenceChannel, setPresenceChannel] = useState<PresenceChannel>();
-  const [members, setMembers] = useState<Map<string, any>>()
+  const [members, setMembers] = useState<{ [s: string]: Member }>()
 
   useEffect(() => {
     const pusherClient_ = createPusher(id.toString())
