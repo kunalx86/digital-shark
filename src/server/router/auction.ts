@@ -106,6 +106,7 @@ export const auctionRouter = createProtectedRouter()
       })
     }),
     async resolve({ ctx, input }) {
+      // TODO: Add check to ensure current owner cannot bid
       const auction = await ctx.prisma.auction.findFirstOrThrow({
         where: {
           id: input.id,
@@ -124,12 +125,19 @@ export const auctionRouter = createProtectedRouter()
       }
 
       const result = await redisClient.lIndex(`bid-${auction.id}`, -1) ?? ""
-      const topPrice = parseInt(result?.split("$")[1]!, 10)
+      const [topBidder, topPrice] = result?.split("$").map(num => parseInt(num, 10));
      
-      if (topPrice >= input.price) {
+      if (topPrice && topPrice >= input.price) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Bid higher!"
+        })
+      }
+
+      if (topBidder && topBidder === ctx.session.user.id) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Cannot bid again!"
         })
       }
 
@@ -137,7 +145,8 @@ export const auctionRouter = createProtectedRouter()
       const timerStart = dayjs().add(5, "seconds").toDate().getTime()
       const timerEnd = dayjs().add(15, "seconds").toDate().getTime()
 
-      await redisClient.rPush(`bid-${auction.id}`, `${ctx.session.user.id}$${input.price}${timerStart}${timerEnd}`)
+      await redisClient.rPush(`bid-${auction.id}`, `${ctx.session.user.id}$${input.price}$${timerStart}$${timerEnd}`)
+      console.log("-------------------here")
 
       await pusherServer.trigger(`presence-${auction.id}`, "new-bid", {
         bidPrice: input.price,
@@ -148,11 +157,13 @@ export const auctionRouter = createProtectedRouter()
     }
   })
   .query("bid-status", {
-    input: z.string({
+    input: z.number({
       required_error: "Auction ID is necessary"
     }),
     async resolve({ input }) {
-      return redisClient.lRange(`presence-${input}`, 1, -1)
+      const res = await redisClient.lRange(`bid-${input}`, 1, -1);
+      console.log(res)
+      return redisClient.lRange(`bid-${input}`, 1, -1)
         .then(bids => bids.map(bid => bid.split("$")) as [string, string, string, string][])
         .then(bids => bids.map(([user, price, timerStart, timerEnd]) => ({
           user,
@@ -176,4 +187,4 @@ export const auctionRouter = createProtectedRouter()
         }
       })
     }
-  })
+  });

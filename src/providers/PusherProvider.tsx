@@ -1,6 +1,7 @@
 import { env } from "@env/client.mjs";
+import { useRouter } from "next/router";
 import Pusher, { PresenceChannel } from "pusher-js";
-import { createContext, ReactNode, useEffect, useState } from "react";
+import { createContext, ReactNode, useEffect, useMemo, useState } from "react";
 
 export type Member = {
   id: number,
@@ -11,7 +12,8 @@ export type Member = {
 const PusherContext = createContext<{
   pusherClient: Pusher,
   presenceChannel: PresenceChannel,
-  members: Array<Member> // Object.entries won't cooperate with Map<string, T>
+  members: Array<Member>, // Object.entries won't cooperate with Map<string, T>
+  auctionId: number
 } | undefined>(undefined)
 
 function createPusher(user_id: string) {
@@ -37,6 +39,8 @@ function PusherProvider({ slug, id, children }: {
   const [pusherClient, setPusher] = useState<Pusher>();
   const [presenceChannel, setPresenceChannel] = useState<PresenceChannel>();
   const [members, setMembers] = useState<Array<Member>>([])
+  const router = useRouter()
+  const auctionId = useMemo(() => Number(router.query.slug as string), []);
 
   useEffect(() => {
     const pusherClient_ = createPusher(id.toString())
@@ -62,7 +66,8 @@ function PusherProvider({ slug, id, children }: {
     <PusherContext.Provider value={{
       pusherClient,
       presenceChannel,
-      members
+      members,
+      auctionId
     }}>
       {children}
     </PusherContext.Provider>
