@@ -21,10 +21,7 @@ function useSubscribeChannel<T>(event: string, callback: (data: T) => void) {
     const reference = (data: T) => {
       ref.current(data)
     }
-    if (presenceChannel !== undefined) {
-      presenceChannel.bind(event, reference)
-    }
-
+    presenceChannel.bind(event, reference)
     return () => {
       presenceChannel?.unbind(event, reference)
     }

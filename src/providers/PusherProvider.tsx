@@ -9,9 +9,9 @@ export type Member = {
 }
 
 const PusherContext = createContext<{
-  pusherClient: Pusher | undefined,
-  presenceChannel: PresenceChannel | undefined,
-  members: { [s: string]: Member } | undefined // Object.entries won't cooperate with Map<string, T>
+  pusherClient: Pusher,
+  presenceChannel: PresenceChannel,
+  members: Array<Member> // Object.entries won't cooperate with Map<string, T>
 } | undefined>(undefined)
 
 function createPusher(user_id: string) {
@@ -36,7 +36,7 @@ function PusherProvider({ slug, id, children }: {
 }) {
   const [pusherClient, setPusher] = useState<Pusher>();
   const [presenceChannel, setPresenceChannel] = useState<PresenceChannel>();
-  const [members, setMembers] = useState<{ [s: string]: Member }>()
+  const [members, setMembers] = useState<Array<Member>>([])
 
   useEffect(() => {
     const pusherClient_ = createPusher(id.toString())
@@ -44,13 +44,19 @@ function PusherProvider({ slug, id, children }: {
     setPresenceChannel(presenceChannel_)
     setPusher(pusherClient_)
 
-    presenceChannel_.bind("pusher:subscription_succeeded", () => setMembers(presenceChannel_.members.members));
-    presenceChannel_.bind("pusher:member_added", () => setMembers(presenceChannel_.members.members));
-    presenceChannel_.bind("pusher:member_removed", () => setMembers(presenceChannel_.members.members));
+    const updateMembers = () => {
+      setMembers(Object.entries(presenceChannel_.members.members as { [s: string]: Member }).map(([, member]: [string, Member]) => member));
+    }
+
+    presenceChannel_.bind("pusher:subscription_succeeded", updateMembers);
+    presenceChannel_.bind("pusher:member_added", updateMembers);
+    presenceChannel_.bind("pusher:member_removed", updateMembers);
     return () => {
       pusherClient_.disconnect();
     }
   }, [slug, id]);
+
+  if (pusherClient === undefined || presenceChannel === undefined || members === undefined) return null;
 
   return (
     <PusherContext.Provider value={{

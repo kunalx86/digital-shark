@@ -1,4 +1,4 @@
-import { Stack, Flex, Heading, Image, Text, Grid, GridItem, Box, Textarea, Avatar, AvatarBadge, AvatarGroup } from "@chakra-ui/react";
+import { Stack, Flex, Heading, Image, Box, Textarea, Avatar, AvatarBadge, AvatarGroup } from "@chakra-ui/react";
 import { usePusher } from "@hooks/pusher";
 import { Auction, Product } from "@prisma/client";
 import { Member } from "@providers/PusherProvider";
@@ -27,16 +27,12 @@ export function AuctionContainer({ auction }: {
 
 function OnlineUsers() {
   const { members } = usePusher()
-  if (members === undefined) {
-    return (
-      <Text>Lol</Text>
-    )
-  }
   return (
     <Flex direction="column">
       Online Users:
       <AvatarGroup max={1}>
-        {Object.entries<Member>(members).map(([, member]) => <User key={member.id} info={member} />)}
+        {/* {Object.entries<Member>(members).map(([, member]) => <User key={member.id} info={member} />)} */}
+        {members.map(member => <User key={member.id} info={member} />)}
       </AvatarGroup>
    </Flex>
   )
