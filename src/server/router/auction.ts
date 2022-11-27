@@ -125,7 +125,7 @@ export const auctionRouter = createProtectedRouter()
       }
 
       const result = await redisClient.lIndex(`bid-${auction.id}`, -1) ?? ""
-      const [topBidder, topPrice] = result?.split("$").map(num => parseInt(num, 10));
+      const [_, topBidder, topPrice] = result?.split("$").map(num => parseInt(num, 10));
      
       if (topPrice && topPrice >= input.price) {
         throw new TRPCError({
@@ -145,12 +145,12 @@ export const auctionRouter = createProtectedRouter()
       const timerStart = dayjs().add(5, "seconds").toDate().getTime()
       const timerEnd = dayjs().add(15, "seconds").toDate().getTime()
 
-      await redisClient.rPush(`bid-${auction.id}`, `${ctx.session.user.id}$${input.price}$${timerStart}$${timerEnd}`)
+      await redisClient.rPush(`bid-${auction.id}`, `${ctx.session.user.name}$${ctx.session.user.id}$${input.price}$${timerStart}$${timerEnd}`)
       console.log("-------------------here")
 
       await pusherServer.trigger(`presence-${auction.id}`, "new-bid", {
         bidPrice: input.price,
-        bidderId: input.id,
+        bidderId: ctx.session.user.id,
         timerStart,
         timerEnd
       })
@@ -164,8 +164,9 @@ export const auctionRouter = createProtectedRouter()
       const res = await redisClient.lRange(`bid-${input}`, 1, -1);
       console.log(res)
       return redisClient.lRange(`bid-${input}`, 1, -1)
-        .then(bids => bids.map(bid => bid.split("$")) as [string, string, string, string][])
-        .then(bids => bids.map(([user, price, timerStart, timerEnd]) => ({
+        .then(bids => bids.map(bid => bid.split("$")) as [string, string, string, string, string][])
+        .then(bids => bids.map(([username, user, price, timerStart, timerEnd]) => ({
+          username: username ?? "Bob",
           user,
           price,
           timerStart,

@@ -13,7 +13,8 @@ const PusherContext = createContext<{
   pusherClient: Pusher,
   presenceChannel: PresenceChannel,
   members: Array<Member>, // Object.entries won't cooperate with Map<string, T>
-  auctionId: number
+  auctionId: number,
+  reorderMembers: (id: number) => void
 } | undefined>(undefined)
 
 function createPusher(user_id: string) {
@@ -42,6 +43,19 @@ function PusherProvider({ slug, id, children }: {
   const router = useRouter()
   const auctionId = useMemo(() => Number(router.query.slug as string), []);
 
+  const reorderMembers = (id: number) => {
+    setMembers(m => {
+      const idx = m.findIndex((member) => member.id === id);
+      if (idx !== -1) {
+        const member = m.splice(idx);
+        return [...member, ...m]
+      }
+      else {
+        return m;
+      }
+    });
+  }
+
   useEffect(() => {
     const pusherClient_ = createPusher(id.toString())
     const presenceChannel_ = pusherClient_.subscribe(`presence-${slug}`) as PresenceChannel
@@ -67,7 +81,8 @@ function PusherProvider({ slug, id, children }: {
       pusherClient,
       presenceChannel,
       members,
-      auctionId
+      auctionId,
+      reorderMembers
     }}>
       {children}
     </PusherContext.Provider>

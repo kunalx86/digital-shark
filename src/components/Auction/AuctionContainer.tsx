@@ -6,11 +6,19 @@ import { trpc } from "@utils/trpc";
 import { useState } from "react";
 import { FaDollarSign } from "react-icons/fa";
 
+type SubscribeBid = {
+  bidPrice: number,
+  bidderId: number,
+  timerStart: number,
+  timerEnd: number
+};
+      
+
 export function AuctionContainer({ auction }: {
-  auction: Auction & {
-    product: Product
-  }
-}) {
+    auction: Auction & {
+      product: Product
+    }
+  }) {
   return (
     <Flex direction="column" alignItems="center">
       <Heading>Auction of {auction.product.name}</Heading>
@@ -22,7 +30,7 @@ export function AuctionContainer({ auction }: {
         width="40%"
         rounded="lg"
       />
-      <BiddingView />
+      {/* <BiddingView /> */}
       <OnlineUsers />
       <BidForm auctionId={auction.id} />
     </Flex>
@@ -59,7 +67,7 @@ function BidForm({ auctionId }: {
             <FaDollarSign />
           </InputLeftAddon>
           <Input
-            name="bid" 
+            name="bid"
             type="number"
             value={bid}
             w="inherit"
@@ -73,27 +81,30 @@ function BidForm({ auctionId }: {
 }
 
 function OnlineUsers() {
-  const { members, auctionId } = usePusher()
+  const { members, auctionId, reorderMembers } = usePusher()
   const { data, isLoading, refetch } = trpc.useQuery(["auction.bid-status", auctionId])
-  useSubscribeChannel("new-bid", () => refetch());
+  useSubscribeChannel<SubscribeBid>("new-bid", (bid) => {
+    reorderMembers(bid.bidderId);
+    refetch();
+  });
   return (
-    <Flex direction="column">
+    <Flex direction="column" mb={"6px"} p={"5px"}>
       Online Users:
-      <Grid>
+      <Grid templateColumns={"repeat(2, 5fr)"}>
         {members.map(member => <User key={member.id} info={member} />)}
       </Grid>
       <Flex maxH="20%" direction="column">
-      {
-        isLoading
-        ? <Spinner />
-        : (data || []).map(bid => (
-          <Text key={bid.timerStart}>
-            Bid of {bid.price} by {bid.user}
-          </Text>
-        ))
-      }
+        {
+          isLoading
+            ? <Spinner />
+            : (data || []).map(bid => (
+              <Text key={bid.timerStart}>
+                Bid of {bid.price} by {bid.username}
+              </Text>
+            ))
+        }
       </Flex>
-   </Flex>
+    </Flex>
   )
 }
 
