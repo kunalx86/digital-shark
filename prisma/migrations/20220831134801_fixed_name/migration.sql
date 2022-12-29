@@ -5,5 +5,5 @@
 
 */
 -- AlterTable
-ALTER TABLE "Auction" DROP COLUMN "TimeZone",
-ADD COLUMN     "timeZone" VARCHAR(255);
+-- ALTER TABLE "Auction" DROP COLUMN "TimeZone",
+-- ADD COLUMN     "timeZone" VARCHAR(255);

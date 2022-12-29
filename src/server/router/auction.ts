@@ -126,7 +126,7 @@ export const auctionRouter = createProtectedRouter()
 
       const result = await redisClient.lIndex(`bid-${auction.id}`, -1) ?? ""
       const [_, topBidder, topPrice] = result?.split("$").map(num => parseInt(num, 10));
-     
+
       if (topPrice && topPrice >= input.price) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -141,12 +141,10 @@ export const auctionRouter = createProtectedRouter()
         })
       }
 
-      // TODO: Calculate timestamps, 5 sec from now and then 15 secs from now
       const timerStart = dayjs().add(5, "seconds").toDate().getTime()
       const timerEnd = dayjs().add(15, "seconds").toDate().getTime()
 
       await redisClient.rPush(`bid-${auction.id}`, `${ctx.session.user.name}$${ctx.session.user.id}$${input.price}$${timerStart}$${timerEnd}`)
-      console.log("-------------------here")
 
       await pusherServer.trigger(`presence-${auction.id}`, "new-bid", {
         bidPrice: input.price,
@@ -188,4 +186,83 @@ export const auctionRouter = createProtectedRouter()
         }
       })
     }
-  });
+  })
+  .mutation("bid-winner", {
+    input: z.number({
+      required_error: "Auction ID is necessary"
+    }),
+    async resolve({ ctx, input }) {
+      const res = await redisClient.lIndex(`bid-${input}`, -1);
+      const [_, user, price, __, ___] = res?.split("$") as [string, string, string, string, string];
+      await ctx.prisma.auction.findFirstOrThrow({
+        where: {
+          id: input,
+          sold: null,
+        }
+      });
+      const auction = await ctx.prisma.auction.update({
+        where: {
+          id: input
+        },
+        data: {
+          highestBid: parseInt(price),
+          highestBidder: {
+            connect: {
+              id: parseInt(user)
+            }
+          },
+          sold: true
+        }
+      });
+
+      const winnerU = await ctx.prisma.user.findUniqueOrThrow({
+        where: {
+          id: parseInt(user)
+        }
+      });
+
+      if (winnerU.coins < parseInt(price)) {
+        throw new TRPCError({
+          message: "Not enough balance",
+          code: "BAD_REQUEST"
+        })
+      }
+
+      await ctx.prisma.product.update({
+        where: {
+          id: auction.productId
+        },
+        data: {
+          to: {
+            connect: {
+              id: parseInt(user)
+            }
+          },
+          owner: {
+            connect: {
+              id: parseInt(user)
+            }
+          },
+        }
+      });
+
+      console.log("----------")
+      console.log(winnerU.coins, price)
+      console.log("----------")
+
+      const winner = await ctx.prisma.user.update({
+        where: {
+          id: parseInt(user)
+        },
+        data: {
+          coins: {
+            decrement: parseInt(price)
+          }
+        }
+      });
+      return {
+        ...winner,
+        bid: price
+      };
+    }
+  })

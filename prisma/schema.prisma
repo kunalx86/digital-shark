@@ -12,6 +12,7 @@ datasource db {
   // https://next-auth.js.org/adapters/prisma#create-the-prisma-schema
   // https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#string
   url      = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
 // Necessary for Next auth
@@ -59,19 +60,19 @@ model User {
 }
 
 model Product {
-  id              Int      @id @default(autoincrement())
-  name            String   @db.VarChar(255)
-  description     String   @db.Text
+  id              Int       @id @default(autoincrement())
+  name            String    @db.VarChar(255)
+  description     String    @db.Text
   image           String
   fromId          Int
-  from            User     @relation("from", fields: [fromId], references: [id])
+  from            User      @relation("from", fields: [fromId], references: [id])
   toId            Int?
-  to              User?    @relation("to", fields: [toId], references: [id])
+  to              User?     @relation("to", fields: [toId], references: [id])
   ownerId         Int
-  owner           User     @relation("owned", fields: [ownerId], references: [id])
+  owner           User      @relation("owned", fields: [ownerId], references: [id])
   topics          Topic[]
   subscribedUsers User[]
-  auction         Auction? @relation("auction")
+  auction         Auction?  @relation("auction")
 }
 
 model Topic {

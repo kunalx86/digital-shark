@@ -36,7 +36,7 @@ export const profileRouter = createProtectedRouter()
         }),
       ]);
 
-      return [coins, ...result]
+      return [coins, ...result] as [number, number, number, number]
     }
   })
   .mutation("give-coins", {

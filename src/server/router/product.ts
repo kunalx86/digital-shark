@@ -34,6 +34,33 @@ const unAuthRouter = createRouter()
       return product;
     }
   })
+  .query("latest-products", {
+    async resolve({ ctx }) {
+      return await ctx.prisma.product.findMany({
+        include: {
+          owner: true
+        },
+        take: 5
+      })
+    }
+  })
+  .query("latest-bidding-products", {
+    async resolve({ ctx }) {
+      return await ctx.prisma.product.findMany({
+        where: {
+          auction: {
+            startTime: {
+              gt: new Date()
+            }
+          }
+        },
+        include: {
+          owner: true
+        },
+        take: 5
+      })
+    }
+  })
 
 const authProductRouter = createProtectedRouter()
   .query("products", {

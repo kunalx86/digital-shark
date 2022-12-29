@@ -10,6 +10,7 @@ import Layout from "@components/Layout";
 import theme from "src/theme"
 import { ReactNode } from "react";
 import { ReactQueryDevtools } from "react-query/devtools"
+import { env } from "process";
 
 function AuthLoader({ children }: { children: ReactNode }) {
   const { status } = useSession();

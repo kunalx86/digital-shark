@@ -53,8 +53,8 @@ export function ProductForm() {
         title: "Product creation successful",
         description: `Product with name ${data.name} successfully created`
       })
-      utils.invalidateQueries(["product.owner"])
       utils.invalidateQueries(["profile.stats"])
+      utils.invalidateQueries(["product.products"])
       reset()
     },
   })

@@ -24,7 +24,7 @@ function ProductPage() {
       let description = `Subscribed product ${product!.name} succesfully`
       subscribed = !data;
       if (!data) {
-        description = `Unsubscribed product ${product!.name} succesfully` 
+        description = `Unsubscribed product ${product!.name} succesfully`
       }
       toast({
         status: "info",
@@ -65,22 +65,22 @@ function ProductPage() {
         />
         {
           product.auction !== null ?
-          product.auction.sold ?
-            <Text>
-              Product sold to {product.to?.name}
-            </Text> 
-          : <Text>
-              <> For auction on {date}</>
-            </Text>
-          : null
+            product.auction.sold ?
+              <Text>
+                Product sold to {product.to?.name}
+              </Text>
+              : <Text>
+                <> For auction on {date}</>
+              </Text>
+            : null
         }
         <Stack direction="row" spacing={2} mt={2}>
           {
-            product.ownerId === session.data?.user?.id || 
-            product.fromId === session.data?.user?.id ||
-            product.toId === session.data?.user?.id
-            ? null
-            : <Button onClick={() => {
+            product.ownerId === session.data?.user?.id ||
+              product.fromId === session.data?.user?.id ||
+              product.toId === session.data?.user?.id
+              ? null
+              : <Button onClick={() => {
                 mutate(product.id)
               }} variant="outline" disabled={session.status === "unauthenticated"}>
                 {subscribed ? "Unsubscribe" : "Susbrcribe"}
@@ -88,8 +88,8 @@ function ProductPage() {
           }
           {
             product.auction !== null && !product.auction.sold
-            ? <AuctionView auction={product.auction} />
-            : null
+              ? <AuctionView auction={product.auction} />
+              : null
           }
         </Stack>
       </Stack>
@@ -105,15 +105,13 @@ function AuctionView({ auction }: {
   const router = useRouter()
 
   useEffect(() => {
-    if (false) {
-      const diff = dayjs(auction.startTime).diff() < (-1000) * 10 // This means more than 10 minutes have been passed since startTime
-      if (diff && auction.sold === null) {
-        // TODO: Trigger a mutation to mark sold as false? This won't work coz react will fire this twice
-        mutate(auction.id)
-        setToSell(false)
-      } else if (!diff) {
-        setToSell(true)
-      }
+    const diff = dayjs(auction.startTime).diff() < (-1000) * 10 // This means more than 10 minutes have been passed since startTime
+    if (diff && auction.sold === null) {
+      // TODO: Trigger a mutation to mark sold as false? This won't work coz react will fire this twice
+      mutate(auction.id)
+      setToSell(false)
+    } else if (!diff) {
+      setToSell(true)
     }
   }, [auction, mutate])
 

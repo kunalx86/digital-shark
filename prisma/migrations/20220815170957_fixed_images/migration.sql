@@ -9,7 +9,7 @@
 ALTER TABLE "Image" DROP CONSTRAINT "Image_postId_fkey";
 
 -- AlterTable
-ALTER TABLE "Product" ADD COLUMN     "image" TEXT NOT NULL;
+-- ALTER TABLE "Product" ADD COLUMN     "image" TEXT NOT NULL;
 
 -- DropTable
 DROP TABLE "Image";
